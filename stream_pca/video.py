@@ -5,7 +5,7 @@ import cv2, numpy as np, torch
 class VideoWrapper:
     "Handles IO: Reading, Resizing, Batching, and Saving."
 
-    def __init__(self, fn, width=160):
+    def __init__(self, fn, width=160, max_frame = None):
         self.fn, self.width = fn, width
         self.cap = cv2.VideoCapture(fn)
         if not self.cap.isOpened():
@@ -15,7 +15,8 @@ class VideoWrapper:
         w_orig = self.cap.get(cv2.CAP_PROP_FRAME_WIDTH)
         self.h = int(self.cap.get(cv2.CAP_PROP_FRAME_HEIGHT) * (width / w_orig))
         self.n_frames = int(self.cap.get(cv2.CAP_PROP_FRAME_COUNT))
-
+        self.max_frame = min(max_frame or self.n_frames, self.n_frames)        
+        
         # Pre-allocate storage
         self.L_store = np.zeros((self.n_frames, self.h, self.width, 3), dtype=np.uint8)
         self.S_store = np.zeros((self.n_frames, self.h, self.width, 3), dtype=np.uint8)
@@ -23,12 +24,12 @@ class VideoWrapper:
     def process(self, model: CompressiveModel):
         # 1. Warmup Model
         frames = []
-        for _ in range(min(30, self.n_frames)):
+        for _ in range(self.max_frame):
             ret, f = self.cap.read()
             if not ret:
                 break
             frames.append(
-                cv2.cvtColor(cv2.resize(f, (self.width, self.h)), cv2.COLOR_BGR2RGB)
+                cv2.cvtColor(cv2.resize(f, (self.width, self.h)), cv2.COLOR_BGR2RGB) # h, w, 3
             )
         model.init_basis(frames)
 
