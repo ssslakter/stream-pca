@@ -1,6 +1,6 @@
 import argparse
 from stream_pca import VideoWrapper
-from stream_pca import OnlineRobustPCA, CompressiveModel, FullRobustPCA
+from stream_pca import OnlineStochasticRPCA, CompressiveModel, FullRobustPCA
 from stream_pca.utils import get_device
 
 
@@ -17,8 +17,8 @@ def main():
     dev = "cpu" if a.cpu else get_device()
     # model = CompressiveModel(subsample=a.ratio, device=dev)
     # model = OnlineRobustPCA(lam=a.ratio, device=dev)
-    # model = OnlineRobustPCA(lam=a.ratio, device=dev)
-    model = FullRobustPCA(device=dev)
+    # model = FullRobustPCA(device=dev)
+    model = OnlineStochasticRPCA(device=dev)
     try:
         wrp = VideoWrapper(a.filename, width=a.width, max_frame=1000)
         wrp.process(model)
