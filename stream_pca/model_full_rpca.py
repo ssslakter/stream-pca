@@ -24,7 +24,7 @@ class FullRobustPCA:
     """
     run RPCA on full frame
     """
-    def __init__(self, lam=0.006, mu=1, max_iter=50, device=None):
+    def __init__(self, lam=0.006, mu=1, max_iter=500, device=None):
         self.lam = lam         # lambda (weight for sparsity)
         self.mu = mu           # mu (penalty parameter)
         self.max_iter = max_iter # Number of ADMM iterations for the whole batch
@@ -54,7 +54,7 @@ class FullRobustPCA:
             for f in frames
         ]
         M = torch.stack(M_list, dim=1) # hwc x num_frame
-        print(f"\n--- Running Batch RPCA ---")
+        print(f"\n--- Running Full RPCA ---")
         print(f"Matrix M size: {self.D} x {T}. Running for max {self.max_iter} iterations...")
         
         # 2. ADMM
@@ -132,6 +132,8 @@ class FullRobustPCA:
             S_col = self.S_batch[:, t]
 
         L_out = L_col.view(self.H, self.W, self.C).to(self.device).clip(0, 1)
+        S_out = np.maximum(np.abs(S_col) - 0.01, 0.0)
         S_out = S_col.view(self.H, self.W, self.C).to(self.device).clip(0, 1)
+
         self.current_frame_idx += 1
         return L_out, S_out
