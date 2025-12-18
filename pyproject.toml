@@ -6,10 +6,10 @@ dependencies = [
     "scikit-learn",
     "ipywidgets",
     "nbdev",
-    "opencv-python",
+    "opencv-python>=4.12.0.88,<5",
 ]
 name = "stream-pca"
-requires-python = ">= 3.12"
+requires-python = ">= 3.12, <3.14"
 version = "0.1.0"
 
 [build-system]
