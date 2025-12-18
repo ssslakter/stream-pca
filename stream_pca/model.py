@@ -9,9 +9,10 @@ class CompressiveModel:
         self.U_flat = None
 
     def init_basis(self, frames):
-        # Robust Init: Median of N frames -> GPU Tensor
+        # Robust Init: Median of N frames -> GPU Tensor\
         med = np.median(np.array(frames), axis=0).astype(np.float32) / 255.0
         self.U_flat = torch.tensor(med, device=self.device).view(-1, 3)
+        print("the shapef of  self.U_flat, med", np.shape( self.U_flat),"med", np.shape( med), "frames", np.shape( frames))
 
     def __call__(self, x):
         # x: (H, W, 3) Tensor, normalized 0-1
@@ -36,5 +37,5 @@ class CompressiveModel:
 
         # 2. Post-Process (Digital Gate)
         L = l_out.view(h, w, 3).clip(0, 1)
-        S = (s_out.view(h, w, 3).abs() - 0.15).relu() * 4.0
+        S = (s_out.view(h, w, 3).abs() - 0.01).relu() * 4.0
         return L, S.clip(0, 1)

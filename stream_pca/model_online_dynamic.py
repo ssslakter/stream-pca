@@ -24,11 +24,12 @@ class OnlineMovingWindowRPCA:
     Uses a burn-in batch (Full RPCA) for initialization and then tracks 
     the subspace using a sliding window.
     """
-    def __init__(self, rank=200, lam1=0.5, lam2=0.005, n_win=50, n_burnin=100, max_inner_iter=5, device=None):
+    def __init__(self, rank=400, lam1=0.05, lam2=0.005, n_win=20, n_burnin=20, max_inner_iter=50, device=None):
         # Hyperparameters
-        self.rank = rank              # r: Target rank
+        self.rank = rank              # r: Target rank (maximum rank)
         self.lam1 = lam1              # lambda1: Ridge regularization
         self.lam2 = lam2              # lambda2: Sparsity weight
+        assert n_burnin >= n_win, "Burn-in size must be at least as large as window size."
         self.n_win = n_win            # n_win: Moving window size
         self.n_burnin = n_burnin      # n_burnin: Initialization batch size (must be >= n_win)
         self.max_inner_iter = max_inner_iter
@@ -199,8 +200,8 @@ class OnlineMovingWindowRPCA:
 
         # 4. Return Result
         L_vec = (self.U @ v).view(H, W, C)
-        S_vec = s.view(H, W, C)
-        
+        S_vec = (s.view(H, W, C).abs() - 0.01).relu()
+
         return L_vec.clip(0, 1), S_vec.clip(0, 1)
 
     def _project_sample(self, m):

@@ -79,7 +79,7 @@ class OnlineStochasticRPCA:
         s = torch.zeros_like(m)
         UtU = self.U.T @ self.U
         
-        # Inner loop (Alternating Minimization)
+        # Inner loop (Alternating Minimization) to find v and s 
         for _ in range(self.max_inner_iter):
             # v update: (U^T U + lam1 I) v = U^T (m - s)
             rhs = self.U.T @ (m - s)
@@ -97,7 +97,37 @@ class OnlineStochasticRPCA:
         # B <- B + (m - s) v^T
         self.B += (m - s) @ v.T
         
-        # Update Basis U
+        # # Update Basis U (algorithm 3)
+        # A_tilde = self.A + self.lam1 * self.I_r
+        # # Iterate over each column of U
+        # for j in range(self.rank):
+        #     # Get j-th column of B
+        #     # b_j = self.B[:, j].unsqueeze(1)  # m × 1
+            
+        #     # Get j-th row of Ã (excluding diagonal)
+        #     # a_tilde_j = A_tilde[j, :].unsqueeze(0)  # 1 × r
+
+        #     # Compute U * ã_j (excluding the j-th column's contribution to itself)
+        #     # We need to be careful: when we compute U * ã_j, we should use
+        #     # the current U but with the j-th column set to zero for this operation
+        #     U_temp = self.U.clone()
+        #     U_temp[:, j] = 0  # Zero out the j-th column for this computation
+        #     U_a_tilde = U_temp @ A_tilde[j, :].unsqueeze(0).T  # m × 1
+            
+        #     # Current j-th column of U
+        #     # u_j = self.U[:, j].unsqueeze(1)  # m × 1
+
+        #     # Update: ũ_j = (1/Ã[j,j]) * (b_j - U * ã_j) + u_j
+        #     u_tilde = (1.0 / A_tilde[j, j]) * (self.B[:, j].unsqueeze(1) - U_a_tilde) + self.U[:, j].unsqueeze(1)
+            
+        #     # Normalize: u_j = ũ_j / max(||ũ_j||₂, 1)
+        #     norm_u_tilde = torch.norm(u_tilde, p=2)
+        #     if norm_u_tilde > 1:
+        #         u_tilde = u_tilde / norm_u_tilde
+            
+        #     # Update the j-th column of U
+        #     self.U[:, j] = u_tilde.squeeze(1)
+
         # U = B (A + lam1 I)^-1
         lhs_U = self.A + self.lam1 * self.I_r
         # Solve U @ lhs_U = B  =>  U = (lhs_U^-1 @ B^T)^T
@@ -105,6 +135,6 @@ class OnlineStochasticRPCA:
 
         # --- Step 3: Return Result ---
         L_vec = (self.U @ v).view(H, W, C)
-        S_vec = s.view(H, W, C)
+        S_vec = (s.view(H, W, C).abs() - 0.01).relu()
         
         return L_vec.clip(0, 1), S_vec.clip(0, 1)

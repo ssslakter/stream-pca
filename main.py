@@ -1,6 +1,6 @@
 import argparse
 from stream_pca import VideoWrapper
-from stream_pca import OnlineStochasticRPCA, CompressiveModel, FullRobustPCA, OnlineMovingWindowRPCA
+from stream_pca import OnlineStochasticRPCA, CompressiveModel, FullRobustPCA, OnlineMovingWindowRPCA, OnlineMovingWindowRPCA_CP
 from stream_pca.utils import get_device
 
 
@@ -19,9 +19,14 @@ def main():
     # model = FullRobustPCA(device=dev)
     # model = OnlineStochasticRPCA(device=dev)
     model = OnlineMovingWindowRPCA(device=dev)
+    # model = OnlineMovingWindowRPCA_CP(device=dev)
     try:
+        import time
+        start_time = time.perf_counter()
         wrp = VideoWrapper(a.filename, width=a.width, max_frame=1000)
         wrp.process(model)
+        end_time = time.perf_counter()
+        print(f"Execution time: {end_time - start_time:.4f} seconds")
     except KeyboardInterrupt:
         print("\nInterrupted! Saving...")
     except FileNotFoundError as e:
